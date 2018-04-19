@@ -1,0 +1,130 @@
+//HADOOP MAP REDUCE
+
+[hadoop@localhost ~]$ ssh localhost				//do this to check if ssh running
+ssh: connect to host localhost port 22: Connection refused			//if this shows..enter below command else skip it
+[hadoop@localhost ~]$ sudo service ssh restart
+[sudo] password for hadoop: 
+Redirecting to /bin/systemctl restart  ssh.service 
+
+[hadoop@localhost ~]$ ssh localhost
+Last login: Thu Apr 19 19:25:37 2018
+e[hadoop@localhost ~]$ exit
+logout
+Connection to localhost closed.
+
+[hadoop@localhost ~]$ cd /$HADOOP_HOME/sbin
+[hadoop@localhost sbin]$ start-all.sh
+[hadoop@localhost sbin]$ jps 			//command to check running process...below is output
+														
+5436 SecondaryNameNode
+4896 NameNode
+5776 NodeManager
+5155 DataNode
+5628 ResourceManager
+6089 Jps
+
+
+[hadoop@localhost sbin]$ hadoop fs -mkdir /user/hadoop1 			//make new directory
+18/04/19 21:46:59 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+
+[hadoop@localhost sbin]$ hadoop fs -put /home/hadoop/sampple.txt /user/hadoop1/input  		//upload sampple to server
+18/04/19 21:48:33 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+
+
+[hadoop@localhost sbin]$ hadoop jar /home/hadoop/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.6.5.jar wordcount /user/hadoop1/input/sampple.txt /user/hadoop1/output1 				//applying map reduce to uploaded code and storing on /user/hadoop1/output1
+
+//after this just go to localhost:50070 and download the file from the right folder
+
+
+
+
+
+//HIVE COMMANDS
+
+[hadoop@localhost ~]$ cd /$HADOOP_HOME/sbin
+[hadoop@localhost sbin]$ start-all.sh
+[hadoop@localhost sbin]$ jps
+2701 NameNode
+3866 Jps
+3363 ResourceManager
+3515 NodeManager
+3138 SecondaryNameNode
+2859 DataNode
+
+[hadoop@localhost sbin]$ cd /home/hadoop/hive
+[hadoop@localhost hive]$ bin/hive 				//to start running hive
+hive> create database test;
+OK
+Time taken: 2.324 seconds
+hive> show databases;      
+OK
+default
+test
+Time taken: 0.035 seconds, Fetched: 2 row(s)
+hive> drop table airport_info;                                                     
+    
+OK
+Time taken: 52.892 seconds
+hive> Create table airport_info (aid int,name string,pin int,hours int)row format delimited fields terminated by ',';
+OK
+Time taken: 1.495 seconds
+
+hive> load data local inpath '/home/hadoop/Downloads/airport_info2.txt' into table airport_info;			//loading data into table
+Copying data from file:/home/hadoop/Downloads/airport_info2.txt
+Copying file: file:/home/hadoop/Downloads/airport_info2.txt
+Loading data to table default.airport_info
+Table default.airport_info stats: [num_partitions: 0, num_files: 1, num_rows: 0, total_size: 67, raw_data_size: 0]
+OK
+Time taken: 8.294 seconds
+
+
+hive> select * from airport_info;
+OK
+111	IGI	411015	8
+112	PI	411015	7
+113	SIS	500132	4
+114	TIG	400231	2
+Time taken: 1.373 seconds, Fetched: 4 row(s)
+
+
+hive> select avg(hours) from airport_info;
+.........bohot kuch ke bad ye aayega
+Mapred Local Task Succeeded . Convert the Join into MapJoin
+OK
+5.25
+
+hive> select max(hours) from airport_info;
+Execution completed successfully
+Mapred Local Task Succeeded . Convert the Join into MapJoin
+OK
+8
+
+hive> create index date_index on table airport_info (pin) as 'COMPACT' WITH DEFERRED REBUILD;
+OK
+Time taken: 31.507 seconds
+
+
+hive> create table delay(id int,delay int) row format delimited fields terminated by ',' stored as textfile;
+OK
+Time taken: 18.442 seconds
+
+hive> load data local inpath '/home/hadoop/Downloads/delay.txt' into table delay;
+Copying data from file:/home/hadoop/Downloads/delay.txt
+Copying file: file:/home/hadoop/Downloads/delay.txt
+Loading data to table default.delay
+Table default.delay stats: [num_partitions: 0, num_files: 1, num_rows: 0, total_size: 24, raw_data_size: 0]
+OK
+Time taken: 67.348 seconds
+
+
+
+hive> select airport_info.name,delay.delay from airport_info join delay on(delay.id=airport_info.aid);			//joining tables
+..............
+Execution completed successfully
+Mapred Local Task Succeeded . Convert the Join into MapJoin
+OK
+IGI	4
+PI	5
+SIS	1
+TIG	0
+Time taken: 71.29 seconds, Fetched: 4 row(s)
